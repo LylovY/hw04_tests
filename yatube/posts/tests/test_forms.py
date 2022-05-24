@@ -20,7 +20,7 @@ class PostFormTest(TestCase):
         cls.post = Post.objects.create(
             author=cls.user,
             text='Тестовый пост',
-         )
+        )
 
         cls.authorised_client = Client()
         cls.authorised_client.force_login(cls.user)
