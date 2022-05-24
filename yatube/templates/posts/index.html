@@ -1,0 +1,31 @@
+<!-- templates/posts/index.html -->
+{% extends 'base.html' %}
+{% block title %}
+ {{ title }}
+{% endblock %}
+{% block header %}
+  <div class="container py-5">
+    <h1>{{ title }}</h1>
+  </div>
+{% endblock %} 
+{% block content %}
+<div class="container py-5">
+  {% for post in page_obj %}
+  <article>
+    <ul>
+      <li>Автор: {{ post.author.get_full_name }}</li>
+      <li>Дата публикации: {{ post.pub_date|date:"d E Y"}}</li>
+    </ul>
+    <p>{{ post.text }}</p>
+    {% if post.group %}
+    <a href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
+    {% endif %}
+    {% if not forloop.last %}
+      <hr>
+    {% endif %}
+  </article>
+  {% endfor %}
+  <!-- под последним постом нет линии -->
+</div>
+{% include 'posts/includes/paginator.html' %}
+{% endblock %}
