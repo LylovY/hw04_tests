@@ -18,7 +18,7 @@ class PostModelTest(TestCase):
         )
         cls.post = Post.objects.create(
             author=cls.user,
-            text='Тестовая пост',
+            text='Тестовый пост длинной более пятнадцати символов',
         )
 
     def test_models_have_correct_object_names(self):
@@ -29,3 +29,32 @@ class PostModelTest(TestCase):
         group = PostModelTest.group
         expected_object_name = group.title
         self.assertEqual(expected_object_name, str(group))
+
+    def test_verbose_name(self):
+        """verbose_name в полях совпадает с ожидаемым."""
+        meta_data = {
+            'text': 'Текст поста',
+            'author': 'Автор',
+            'group': 'Группа'
+        }
+        post = PostModelTest.post
+        for field, expected_value in meta_data.items():
+            with self.subTest(field=field):
+                self.assertEqual(
+                    post._meta.get_field(field).verbose_name, expected_value)
+
+    def test_help_text(self):
+        """help_text в полях совпадает с ожидаемым."""
+        meta_data = {
+            'text': 'Текст нового поста',
+            'author': 'Автор поста',
+            'group': 'Группа, к которой будет относиться пост'
+        }
+        post = PostModelTest.post
+        for field, expected_value in meta_data.items():
+            with self.subTest(field=field):
+                self.assertEqual(
+                    post._meta.get_field(field).help_text, expected_value)
+
+
+

@@ -24,24 +24,43 @@ class PostFormTest(TestCase):
 
         cls.authorised_client = Client()
         cls.authorised_client.force_login(cls.user)
+        cls.guest_client = Client()
 
-    def test_form_create(self):
+    def test_form_create_authorised_client(self):
         '''Проверяем, что форма create_post создает запись в БД'''
         posts_count = Post.objects.count()
         form_data = {
             'text': 'Тестовая запись',
             'group': self.group.id
         }
-        # Отправляем POST-запрос
         self.authorised_client.post(
             reverse('posts:post_create'),
             data=form_data,
             follow=True,
         )
-        # Проверяем, что увеличилось число постов
         self.assertEqual(Post.objects.count(), posts_count + 1)
 
-    def test_form_post_edit(self):
+    def test_form_create_guest_client(self):
+        """Страница по адресу /create/ перенаправит анонимного
+        пользователя на страницу логина. Пост в БД не создастся
+        """
+        posts_count = Post.objects.count()
+        form_data = {
+            'text': 'Тестовая запись',
+            'group': self.group.id
+        }
+        response = self.guest_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response, '/auth/login/?next=/create/'
+        )
+        self.assertNotEqual(Post.objects.count(), posts_count + 1)
+
+    def test_form_post_edit_authorised_client(self):
         '''Проверяем, что форма post_edit редактирует запись в БД'''
         post_for_edit = Post.objects.create(
             author=PostFormTest.user,
@@ -52,7 +71,6 @@ class PostFormTest(TestCase):
             'text': 'New',
             'group': self.group.id
         }
-        # POST-запрос на редактирование формы
         self.authorised_client.post(
             reverse('posts:post_edit', kwargs={'post_id': id_post}),
             data=form_data,
@@ -60,3 +78,26 @@ class PostFormTest(TestCase):
         post_for_edit = Post.objects.get(pk=id_post)
         self.assertEqual(post_for_edit.text, form_data['text'])
         self.assertEqual(post_for_edit.group.id, form_data['group'])
+
+    def test_form_post_edit_guest_client(self):
+        """Страница по адресу /posts/<int:post_id>/edit/ перенаправит анонимного
+        пользователя на страницу логина. Пост в БД не редактируется
+        """
+        post_for_edit = Post.objects.create(
+            author=PostFormTest.user,
+            text='Тестовый пост 2',
+        )
+        id_post = post_for_edit.id
+        form_data = {
+            'text': 'New',
+            'group': self.group.id
+        }
+        response = self.guest_client.post(
+            reverse('posts:post_edit', kwargs={'post_id': id_post}),
+            data=form_data,
+        )
+        post_for_edit = Post.objects.get(pk=id_post)
+        self.assertNotEqual(post_for_edit.text, form_data['text'])
+        self.assertRedirects(
+            response, f'/auth/login/?next=/posts/{id_post}/edit/'
+        )

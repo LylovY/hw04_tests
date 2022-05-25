@@ -18,10 +18,6 @@ class PostPagesTest(TestCase):
             slug='test-slug',
             description='Тестовое описание',
         )
-        # cls.post = Post.objects.create(
-        #    author=cls.user,
-        #    text='Тестовая пост',
-        # )
         cls.posts = {}
         for i in range(13):
             name = 'post{}'.format(i)
